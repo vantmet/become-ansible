@@ -1,0 +1,52 @@
+---
+- hosts: localhost
+  gather_facts: flase
+  connection: local
+
+  tasks:
+    - name: create vpc
+      ec2_vpc_net:
+        name: ansible
+        cidr_block: 10.0.0.0/16
+        region: eu-west-2
+        tags:
+          Name: ansible-vpc
+          app: ansible
+          env: dev
+        state: present
+      register: ansible_vpc
+
+    - name: Create subnet for windows servers
+      ec2_vpc_subnet:
+        region: eu-west-2
+        vpc_id: "{{ ansible_vpc.vpc.id }}"
+        cidr: 10.0.1.16/28
+        tags:
+          Name: Windows Subnet
+          app: ansible
+          env: dev
+        state: present
+      register: windows_subnet
+
+    - name: create internet gateway
+      ec2_vpc_igw:
+        vpc_id: "{{ ansible_vpc.vpc.id }}"
+        region: eu-west-2
+        state: present
+        tags:
+          Name: "ansible-igw"
+          app: ansible
+          env: dev
+      register: igw
+
+    - name: Route IGW
+      ec2_vpc_route_table:
+        vpc_id: "{{ ansible_vpc.vpc.id }}"
+        region: eu-west-2
+        subnets:
+          - "{{ windows_subnet.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id  }}"
+        tags:
+          Name: ansible-public
