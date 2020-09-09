@@ -76,8 +76,7 @@
         instance_type: t2.micro
         image: ami-0c80f4021417f8488
         region: eu-west-2
-        #group: "{{ windows_group.group_name }}"
-        group_id: sg-0107b19bf9acbcfd4
+        group: "{{ windows_group.group_name }}"
         count: 1
         vpc_subnet_id: "{{ ansible_subnet.subnets[0].id }}"
         #vpc_subnet_id: subnet-6756a42b
